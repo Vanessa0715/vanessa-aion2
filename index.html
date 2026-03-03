@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🪐 AION2小紗球</title>
+    <style>
+        :root {
+            --primary: #7a5dfa;
+            --pink: #fbc2eb;
+            --dark: #0f0c29;
+            --gold: #ffdf00;
+            --glass: rgba(255, 255, 255, 0.08);
+            --accent: #ff9a9e;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: linear-gradient(180deg, #0f0c29 0%, #1a1a2e 100%);
+            color: #fff; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; overflow-x: hidden;
+        }
+
+        /* 動態星空背景 */
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0.5; animation: twinkle var(--d) infinite ease-in-out; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        header { margin-top: 30px; text-align: center; z-index: 10; }
+        h1 { font-size: 1.7rem; margin: 0; background: linear-gradient(to right, #a18cd1, #fbc2eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(161, 140, 209, 0.5)); }
+        
+        .planet-box { position: relative; margin: 20px 0; width: 100px; height: 100px; display: flex; justify-content: center; align-items: center; animation: float 4s ease-in-out infinite; }
+        .planet { width: 75px; height: 75px; background: radial-gradient(circle at 30% 30%, #a18cd1, #fbc2eb); border-radius: 50%; box-shadow: 0 0 30px rgba(251, 194, 235, 0.4); font-size: 2.5rem; display: flex; justify-content: center; align-items: center; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+        .container { width: 94%; max-width: 450px; display: flex; flex-direction: column; gap: 18px; margin-bottom: 50px; z-index: 10; }
+        .card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        h3 { margin: 0 0 15px 0; font-size: 1.1rem; color: var(--pink); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+        /* ⏳ 戰情倒數 */
+        .cd-list { display: flex; flex-direction: column; gap: 10px; }
+        .cd-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 12px 16px; border-radius: 14px; border-left: 4px solid var(--gold); }
+        .cd-info { display: flex; flex-direction: column; gap: 2px; }
+        .cd-name { font-size: 0.95rem; font-weight: bold; }
+        .cd-desc { font-size: 0.75rem; color: #888; }
+        .cd-time { font-family: 'Courier New', Courier, monospace; font-size: 1.1rem; color: var(--gold); font-weight: bold; }
+        .cd-row.highlight { border-left-color: var(--pink); }
+        .cd-row.special { border-left-color: var(--accent); }
+        .cd-live { color: #ff5252; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        /* 🐻 施工中小熊 */
+        .bear-container { display: flex; flex-direction: column; align-items: center; padding: 30px 0; color: #ccc; }
+        .bear-icon { font-size: 3.5rem; animation: bounce 2s infinite ease-in-out; margin-bottom: 15px; }
+        .bear-text { font-size: 1rem; letter-spacing: 1px; color: var(--pink); font-weight: bold; }
+        .bear-subtext { font-size: 0.8rem; color: #888; margin-top: 8px; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
+        
+        footer { margin-top: auto; padding: 30px; font-size: 0.8rem; color: rgba(255,255,255,0.3); text-align: center; line-height: 1.6; }
+
+        /* 通知權限提示 */
+        #notifBanner { position: fixed; bottom: 0; left: 0; width: 100%; background: #a18cd1; color: white; padding: 10px; text-align: center; font-size: 0.8rem; display: none; z-index: 100; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="starField"></div>
+    <div id="notifBanner" onclick="requestNotif()">🔔 點擊開啟戰鬥通知，不再錯過神器戰！</div>
+
+    <header>
+        <h1>🪐 AION2小紗球</h1>
+    </header>
+
+    <div class="planet-box">
+        <div class="planet">🪐</div>
+    </div>
+
+    <div class="container">
+        
+        <!-- ⏳ 戰情倒數 -->
+        <div class="card">
+            <h3>⏳ 前線戰役倒數</h3>
+            <div class="cd-list" id="timerList">
+                <!-- 由 JavaScript 生成 -->
+            </div>
+        </div>
+
+        <!-- 📢 官方公告區 (小熊施工版) -->
+        <div class="card">
+            <h3>
+                <span>📢 官方公告區</span>
+                <a href="https://tw.ncsoft.com/aion2/board/notice/list" target="_blank" style="color: var(--pink); font-size: 0.8rem; text-decoration: none;">🔗 另開網頁 ❯</a>
+            </h3>
+            <div class="bear-container">
+                <div class="bear-icon">🐻💻</div>
+                <div class="bear-text">「紗紗努力研究中・・・」</div>
+                <div class="bear-subtext">目前暫時無法嵌入官方公告，請點擊上方連結查看唷！</div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>Made with ❤️ by 凡妮紗<br>願奧德之光守護每一位冒險者</footer>
+
+    <script>
+        // --- 1. 星空生成 ---
+        const starField = document.getElementById('starField');
+        for(let i=0; i<50; i++){
+            const s = document.createElement('div'); s.className = 'star';
+            const size = Math.random()*2.5+1+'px';
+            s.style.width = s.style.height = size;
+            s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+            s.style.setProperty('--d', Math.random()*3+2+'s');
+            starField.appendChild(s);
+        }
+
+        // --- 2. 戰役時間邏輯 ---
+        function getNextRift() {
+            const now = new Date();
+            const hour = now.getHours();
+            // 裂縫每3小時一次: 2, 5, 8, 11, 14, 17, 20, 23
+            let nextH = Math.ceil((hour + 1) / 3) * 3 - 1;
+            if (nextH < hour) nextH += 24; 
+            const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), nextH, 0, 0);
+            return target;
+        }
+
+        function getNextWeeklyEvent(dayArr, h, m) {
+            const now = new Date();
+            let finalTarget = null;
+
+            dayArr.forEach(day => {
+                let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+                let diffDays = (day - now.getDay() + 7) % 7;
+                if (diffDays === 0 && now.getTime() > target.getTime()) diffDays = 7;
+                target.setDate(target.getDate() + diffDays);
+                if (!finalTarget || target < finalTarget) finalTarget = target;
+            });
+            return finalTarget;
+        }
+
+        // 測試用：每 5 分鐘一次
+        function getNextTestTime() {
+            const now = new Date();
+            const ms = 5 * 60 * 1000;
+            return new Date(Math.ceil(now.getTime() / ms) * ms);
+        }
+
+        function updateTimers() {
+            const now = new Date();
+            const list = document.getElementById('timerList');
+            list.innerHTML = '';
+            
+            const eventData = [
+                { 
+                    name: "🔮 神器佔領戰", 
+                    desc: "每週二四六 21:10 開打", 
+                    target: getNextWeeklyEvent([2, 4, 6], 21, 10), 
+                    class: "highlight", 
+                    notifMsgs: ["戰鬥警報！🔮 神器佔領戰 將在 15 分鐘後開始！", "戰鬥警報！🔮 神器佔領戰 將在 10 分鐘後開始！"], 
+                    notifTimes: [900000, 600000] 
+                },
+                { 
+                    name: "👼 深淵神將", 
+                    desc: "每週六日 20:00 刷新", 
+                    target: getNextWeeklyEvent([6, 0], 20, 0), 
+                    class: "special", 
+                    notifMsgs: ["戰鬥警報！👼 深淵神將 將在 5 分鐘後開始！"], 
+                    notifTimes: [300000] 
+                },
+                { 
+                    name: "🛠️ 遊戲維護", 
+                    desc: "每週三 03:30 (請及時打完迴廊)", 
+                    target: getNextWeeklyEvent([3], 3, 30), 
+                    class: "", 
+                    notifMsgs: ["⚠️ 維護預警：距離遊戲維護剩餘 6 小時，請及時打完迴廊喔！"], 
+                    notifTimes: [21600000] 
+                },
+                {
+                    name: "🧪 提醒功能測試",
+                    desc: "每 5 分鐘跳一次通知 (測試用)",
+                    target: getNextTestTime(),
+                    class: "",
+                    notifMsgs: ["✨ 紗，這是一條測試通知！看到代表功能成功囉！"],
+                    notifTimes: [299000] // 靠近目標即發送
+                },
+                { 
+                    name: "🌌 時空裂縫", 
+                    desc: "每 3 小時輪替開啟", 
+                    target: getNextRift(), 
+                    class: "", 
+                    notifMsgs: null, 
+                    notifTimes: null 
+                }
+            ];
+
+            eventData.forEach(e => {
+                const diff = e.target - now;
+                const hh = Math.floor(diff / 3600000).toString().padStart(2,'0');
+                const mm = Math.floor((diff % 3600000) / 60000).toString().padStart(2,'0');
+                const ss = Math.floor((diff % 60000) / 1000).toString().padStart(2,'0');
+                
+                // 通知邏輯
+                if (e.notifTimes && e.notifMsgs) {
+                    e.notifTimes.forEach((t, index) => {
+                        // 測試模組：接近整點 5 分鐘即發
+                        if (e.name === "🧪 提醒功能測試") {
+                            if (diff > 0 && diff < 1000) { sendNotif(e.notifMsgs[0]); }
+                        } else {
+                            if (diff > t - 1000 && diff < t + 1000) {
+                                sendNotif(e.notifMsgs[index]);
+                            }
+                        }
+                    });
+                }
+
+                const row = document.createElement('div');
+                row.className = `cd-row ${e.class}`;
+                row.innerHTML = `
+                    <div class="cd-info"><span class="cd-name">${e.name}</span><span class="cd-desc">${e.desc}</span></div>
+                    <span class="cd-time ${diff < 0 ? 'cd-live' : ''}">${diff < 0 ? '🔥 激戰中' : hh+':'+mm+':'+ss}</span>
+                `;
+                list.appendChild(row);
+            });
+        }
+        setInterval(updateTimers, 1000); updateTimers();
+
+        // --- 3. 通知系統 ---
+        function requestNotif() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(res => {
+                    if (res === "granted") {
+                        document.getElementById('notifBanner').style.display = 'none';
+                        new Notification("AION2小紗球提醒", { body: "妳已成功開啟凡妮紗的戰鬥感知！✨" });
+                    }
+                });
+            }
+        }
+        function sendNotif(msg) {
+            if (Notification.permission === "granted") { new Notification("⚠️ 戰役預警", { body: msg }); }
+        }
+        if ("Notification" in window && Notification.permission !== "granted") {
+            document.getElementById('notifBanner').style.display = 'block';
+        }
+
+    </script>
+</body>
+</html>
