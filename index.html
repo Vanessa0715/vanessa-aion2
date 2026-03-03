@@ -37,8 +37,12 @@
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 
         .container { width: 94%; max-width: 450px; display: flex; flex-direction: column; gap: 18px; margin-bottom: 50px; z-index: 10; }
-        .card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); position: relative; }
+        
+        /* 標題與設定按鈕 */
         h3 { margin: 0 0 15px 0; font-size: 1.1rem; color: var(--pink); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .settings-btn { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; width: 35px; height: 35px; font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; color: #fff; }
+        .settings-btn:active { transform: scale(0.9); background: var(--pink); }
 
         /* ⏳ 戰情倒數 */
         .cd-list { display: flex; flex-direction: column; gap: 10px; }
@@ -56,21 +60,49 @@
         .bear-container { display: flex; flex-direction: column; align-items: center; padding: 30px 0; color: #ccc; }
         .bear-icon { font-size: 3.5rem; animation: bounce 2s infinite ease-in-out; margin-bottom: 15px; }
         .bear-text { font-size: 1rem; letter-spacing: 1px; color: var(--pink); font-weight: bold; }
-        .bear-subtext { font-size: 0.8rem; color: #888; margin-top: 8px; }
+        .bear-subtext { font-size: 0.8rem; color: #888; margin-top: 8px; text-align: center; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
         
         footer { margin-top: auto; padding: 30px; font-size: 0.8rem; color: rgba(255,255,255,0.3); text-align: center; line-height: 1.6; }
 
         /* 通知權限提示 */
         #notifBanner { position: fixed; bottom: 0; left: 0; width: 100%; background: #a18cd1; color: white; padding: 10px; text-align: center; font-size: 0.8rem; display: none; z-index: 100; cursor: pointer; }
+
+        /* ⚙️ 自訂通知設定面板 (Modal) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-content { background: #1a1a2e; border: 1px solid var(--pink); border-radius: 20px; width: 90%; max-width: 360px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.3s; max-height: 80vh; overflow-y: auto; }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .modal-header h4 { margin: 0; color: var(--pink); font-size: 1.2rem; }
+        .close-btn { background: none; border: none; color: #888; font-size: 1.8rem; cursor: pointer; line-height: 1; }
+        
+        .toggle-wrap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 12px; }
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--pink); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .setting-group { margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .setting-label { display: block; font-size: 0.95rem; margin-bottom: 8px; color: #eee; font-weight: bold; }
+        .time-inputs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .time-input-wrap { display: flex; align-items: center; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .time-input-wrap input { width: 35px; background: transparent; border: none; color: var(--gold); font-weight: bold; text-align: center; outline: none; font-size: 1rem; }
+        .time-input-wrap span { font-size: 0.8rem; color: #aaa; }
+        .remove-time-btn { background: none; border: none; color: #ff5252; cursor: pointer; font-size: 1.2rem; margin-left: 5px; padding: 0; }
+        .add-time-btn { background: rgba(251, 194, 235, 0.1); border: 1px dashed var(--pink); color: var(--pink); border-radius: 8px; padding: 6px 15px; cursor: pointer; font-size: 0.8rem; width: 100%; transition: 0.2s; }
+        .add-time-btn:active { background: rgba(251, 194, 235, 0.3); }
+
+        .save-btn { width: 100%; background: linear-gradient(135deg, #a18cd1, #fbc2eb); border: none; color: #1a1a2e; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1.05rem; box-shadow: 0 5px 15px rgba(251,194,235,0.3); }
+        .save-btn:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
     <div class="stars" id="starField"></div>
-    <div id="notifBanner" onclick="requestNotif()">🔔 點擊開啟戰鬥通知，不再錯過神器戰！</div>
+    <div id="notifBanner" onclick="requestNotifBanner()">🔔 點擊開啟瀏覽器通知權限！</div>
 
     <header>
         <h1>🪐 AION2小紗球</h1>
@@ -84,7 +116,10 @@
         
         <!-- ⏳ 戰情倒數 -->
         <div class="card">
-            <h3>⏳ 前線戰役倒數</h3>
+            <h3>
+                <span>⏳ 前線戰役倒數</span>
+                <button class="settings-btn" onclick="openSettings()" title="設定提醒時間">🔔</button>
+            </h3>
             <div class="cd-list" id="timerList">
                 <!-- 由 JavaScript 生成 -->
             </div>
@@ -99,13 +134,55 @@
             <div class="bear-container">
                 <div class="bear-icon">🐻💻</div>
                 <div class="bear-text">「紗紗努力研究中・・・」</div>
-                <div class="bear-subtext">目前暫時無法嵌入官方公告，請點擊上方連結查看唷！</div>
+                <div class="bear-subtext">目前暫時無法嵌入官方公告<br>請點擊上方連結查看唷！</div>
             </div>
         </div>
 
     </div>
 
     <footer>Made with ❤️ by 凡妮紗<br>願奧德之光守護每一位冒險者</footer>
+
+    <!-- ⚙️ 設定面板 (Modal) -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>🔔 自訂戰役提醒</h4>
+                <button class="close-btn" onclick="closeSettings()">×</button>
+            </div>
+            
+            <div class="toggle-wrap">
+                <span style="font-size: 0.95rem; font-weight: bold;">啟用推播提醒</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="enableNotifToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <p style="font-size: 0.75rem; color: #aaa; margin-bottom: 15px; line-height: 1.4;">
+                💡 妳可以自由新增每個戰役的提醒時間（最多 3 個）。時間到時，只要網頁開著就會跳出通知唷！
+            </p>
+
+            <div class="setting-group">
+                <label class="setting-label">🔮 神器佔領戰 (分鐘前)</label>
+                <div class="time-inputs" id="artifactTimes"></div>
+                <button class="add-time-btn" onclick="addTimeInput('artifact', false)">+ 新增提醒時間</button>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">👼 深淵神將 (分鐘前)</label>
+                <div class="time-inputs" id="generalTimes"></div>
+                <button class="add-time-btn" onclick="addTimeInput('general', false)">+ 新增提醒時間</button>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-label">🛠️ 遊戲維護 (小時前)</label>
+                <div class="time-inputs" id="maintTimes"></div>
+                <button class="add-time-btn" onclick="addTimeInput('maint', true)">+ 新增提醒時間</button>
+            </div>
+
+            <button class="save-btn" onclick="saveSettings()">儲存設定</button>
+        </div>
+    </div>
 
     <script>
         // --- 1. 星空生成 ---
@@ -123,17 +200,14 @@
         function getNextRift() {
             const now = new Date();
             const hour = now.getHours();
-            // 裂縫每3小時一次: 2, 5, 8, 11, 14, 17, 20, 23
             let nextH = Math.ceil((hour + 1) / 3) * 3 - 1;
             if (nextH < hour) nextH += 24; 
-            const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), nextH, 0, 0);
-            return target;
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), nextH, 0, 0);
         }
 
         function getNextWeeklyEvent(dayArr, h, m) {
             const now = new Date();
             let finalTarget = null;
-
             dayArr.forEach(day => {
                 let target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
                 let diffDays = (day - now.getDay() + 7) % 7;
@@ -144,59 +218,153 @@
             return finalTarget;
         }
 
-        // 測試用：每 5 分鐘一次
-        function getNextTestTime() {
-            const now = new Date();
-            const ms = 5 * 60 * 1000;
-            return new Date(Math.ceil(now.getTime() / ms) * ms);
+        // --- 3. 自訂通知系統 ---
+        let userSettings = {
+            enabled: false,
+            artifact: [15, 10], // 預設 15分, 10分
+            general: [15, 10],  // 預設 15分, 10分 (依紗紗要求更新)
+            maint: [6]          // 預設 6小時
+        };
+        let notifiedEvents = {}; // 記錄已發送過的通知，避免重複叫
+
+        // 安全地讀取 localStorage (避免 iframe 阻擋導致當機)
+        function safeGetStorage() {
+            try { return localStorage.getItem('紗球設定'); } catch(e) { return null; }
+        }
+        function safeSetStorage(val) {
+            try { localStorage.setItem('紗球設定', val); } catch(e) {}
         }
 
+        function loadSettings() {
+            const saved = safeGetStorage();
+            if (saved) { userSettings = JSON.parse(saved); }
+            document.getElementById('enableNotifToggle').checked = userSettings.enabled;
+        }
+
+        function saveSettings() {
+            // 抓取畫面上輸入的數字
+            const getValues = (id) => Array.from(document.querySelectorAll(`#${id} input`)).map(i => parseInt(i.value)).filter(v => !isNaN(v) && v > 0);
+            
+            userSettings.artifact = getValues('artifactTimes');
+            userSettings.general = getValues('generalTimes');
+            userSettings.maint = getValues('maintTimes');
+            userSettings.enabled = document.getElementById('enableNotifToggle').checked;
+
+            safeSetStorage(JSON.stringify(userSettings));
+            closeSettings();
+
+            // 如果開啟了開關，立刻請求權限
+            if (userSettings.enabled && "Notification" in window) {
+                if (Notification.permission !== "granted") {
+                    Notification.requestPermission().then(res => {
+                        if (res !== "granted") {
+                            alert("哎呀！瀏覽器拒絕了通知權限，記得去網址列旁邊開啟設定喔！");
+                            userSettings.enabled = false;
+                            safeSetStorage(JSON.stringify(userSettings));
+                        } else {
+                            new Notification("🪐 AION2小紗球", { body: "已成功開啟戰鬥自訂通知！" });
+                        }
+                    });
+                }
+            }
+        }
+
+        // Modal UI 控制
+        function openSettings() {
+            loadSettings();
+            renderInputs('artifact', userSettings.artifact, false);
+            renderInputs('general', userSettings.general, false);
+            renderInputs('maint', userSettings.maint, true);
+            
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function renderInputs(type, valuesArray, isHours) {
+            const container = document.getElementById(`${type}Times`);
+            container.innerHTML = '';
+            const unit = isHours ? '小時' : '分鐘';
+            valuesArray.forEach(val => {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="time-input-wrap">
+                        <input type="number" value="${val}" min="1" max="99">
+                        <span>${unit}</span>
+                        <button class="remove-time-btn" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                `);
+            });
+        }
+
+        function addTimeInput(type, isHours) {
+            const container = document.getElementById(`${type}Times`);
+            if (container.children.length >= 3) {
+                alert("最多只能設定 3 個提醒時間喔！太多會吵死啦 😆");
+                return;
+            }
+            const unit = isHours ? '小時' : '分鐘';
+            container.insertAdjacentHTML('beforeend', `
+                <div class="time-input-wrap">
+                    <input type="number" value="5" min="1" max="99">
+                    <span>${unit}</span>
+                    <button class="remove-time-btn" onclick="this.parentElement.remove()">×</button>
+                </div>
+            `);
+        }
+
+        // 發送通知核心邏輯
+        function sendNotif(msg) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("⚠️ 戰役預警", { body: msg });
+            }
+        }
+
+        function checkAndNotify(eventId, targetTime, customTimes, isHours, eventNameMsg) {
+            if (!userSettings.enabled || Notification.permission !== "granted") return;
+            
+            const now = new Date().getTime();
+            const diff = targetTime.getTime() - now; // 距離目標時間的毫秒數
+            
+            customTimes.forEach(timeVal => {
+                // 將使用者輸入的時間轉為毫秒
+                const triggerMs = isHours ? timeVal * 3600000 : timeVal * 60000;
+                
+                // 檢查是否剛好到達觸發時間 (給予上下1秒的緩衝期)
+                if (diff > triggerMs - 1000 && diff < triggerMs + 1000) {
+                    const uniqueKey = `${eventId}_${targetTime.getTime()}_${timeVal}`;
+                    
+                    if (!notifiedEvents[uniqueKey]) {
+                        const unitStr = isHours ? '小時' : '分鐘';
+                        sendNotif(`距離 ${eventNameMsg} 還有 ${timeVal} ${unitStr}！`);
+                        notifiedEvents[uniqueKey] = true;
+                        
+                        // 定期清理舊記錄，避免記憶體塞滿
+                        setTimeout(() => { delete notifiedEvents[uniqueKey]; }, diff + 60000);
+                    }
+                }
+            });
+        }
+
+        // --- 4. 主計時迴圈 ---
         function updateTimers() {
             const now = new Date();
             const list = document.getElementById('timerList');
             list.innerHTML = '';
             
+            // 初次載入確保有設定
+            if(Object.keys(userSettings).length === 1 && !userSettings.enabled) loadSettings();
+
             const eventData = [
-                { 
-                    name: "🔮 神器佔領戰", 
-                    desc: "每週二四六 21:10 開打", 
-                    target: getNextWeeklyEvent([2, 4, 6], 21, 10), 
-                    class: "highlight", 
-                    notifMsgs: ["戰鬥警報！🔮 神器佔領戰 將在 15 分鐘後開始！", "戰鬥警報！🔮 神器佔領戰 將在 10 分鐘後開始！"], 
-                    notifTimes: [900000, 600000] 
-                },
-                { 
-                    name: "👼 深淵神將", 
-                    desc: "每週六日 20:00 刷新", 
-                    target: getNextWeeklyEvent([6, 0], 20, 0), 
-                    class: "special", 
-                    notifMsgs: ["戰鬥警報！👼 深淵神將 將在 5 分鐘後開始！"], 
-                    notifTimes: [300000] 
-                },
-                { 
-                    name: "🛠️ 遊戲維護", 
-                    desc: "每週三 03:30 (請及時打完迴廊)", 
-                    target: getNextWeeklyEvent([3], 3, 30), 
-                    class: "", 
-                    notifMsgs: ["⚠️ 維護預警：距離遊戲維護剩餘 6 小時，請及時打完迴廊喔！"], 
-                    notifTimes: [21600000] 
-                },
-                {
-                    name: "🧪 提醒功能測試",
-                    desc: "每 5 分鐘跳一次通知 (測試用)",
-                    target: getNextTestTime(),
-                    class: "",
-                    notifMsgs: ["✨ 紗，這是一條測試通知！看到代表功能成功囉！"],
-                    notifTimes: [299000] // 靠近目標即發送
-                },
-                { 
-                    name: "🌌 時空裂縫", 
-                    desc: "每 3 小時輪替開啟", 
-                    target: getNextRift(), 
-                    class: "", 
-                    notifMsgs: null, 
-                    notifTimes: null 
-                }
+                { id: 'art', name: "🔮 神器佔領戰", desc: "每週二四六 21:10 開打", target: getNextWeeklyEvent([2, 4, 6], 21, 10), class: "highlight", times: userSettings.artifact, isH: false },
+                { id: 'gen', name: "👼 深淵神將", desc: "每週六日 20:00 刷新", target: getNextWeeklyEvent([6, 0], 20, 0), class: "special", times: userSettings.general, isH: false },
+                { id: 'mnt', name: "🛠️ 遊戲維護", desc: "每週三 03:30 (請及時打完迴廊)", target: getNextWeeklyEvent([3], 3, 30), class: "", times: userSettings.maint, isH: true },
+                { id: 'rft', name: "🌌 時空裂縫", desc: "每 3 小時輪替開啟", target: getNextRift(), class: "", times: [], isH: false } // 裂縫不提醒
             ];
 
             eventData.forEach(e => {
@@ -205,18 +373,9 @@
                 const mm = Math.floor((diff % 3600000) / 60000).toString().padStart(2,'0');
                 const ss = Math.floor((diff % 60000) / 1000).toString().padStart(2,'0');
                 
-                // 通知邏輯
-                if (e.notifTimes && e.notifMsgs) {
-                    e.notifTimes.forEach((t, index) => {
-                        // 測試模組：接近整點 5 分鐘即發
-                        if (e.name === "🧪 提醒功能測試") {
-                            if (diff > 0 && diff < 1000) { sendNotif(e.notifMsgs[0]); }
-                        } else {
-                            if (diff > t - 1000 && diff < t + 1000) {
-                                sendNotif(e.notifMsgs[index]);
-                            }
-                        }
-                    });
+                // 執行客製化通知檢查
+                if (e.times && e.times.length > 0) {
+                    checkAndNotify(e.id, e.target, e.times, e.isH, e.name);
                 }
 
                 const row = document.createElement('div');
@@ -228,23 +387,27 @@
                 list.appendChild(row);
             });
         }
+        
+        loadSettings();
         setInterval(updateTimers, 1000); updateTimers();
 
-        // --- 3. 通知系統 ---
-        function requestNotif() {
+        // 橫幅手動請求權限
+        function requestNotifBanner() {
             if ("Notification" in window) {
                 Notification.requestPermission().then(res => {
                     if (res === "granted") {
                         document.getElementById('notifBanner').style.display = 'none';
-                        new Notification("AION2小紗球提醒", { body: "妳已成功開啟凡妮紗的戰鬥感知！✨" });
+                        // 自動幫她打開設定開關並存檔
+                        userSettings.enabled = true;
+                        safeSetStorage(JSON.stringify(userSettings));
+                        new Notification("AION2小紗球提醒", { body: "妳已成功開啟凡妮紗的戰鬥感知！記得去小鈴鐺設定時間喔✨" });
                     }
                 });
             }
         }
-        function sendNotif(msg) {
-            if (Notification.permission === "granted") { new Notification("⚠️ 戰役預警", { body: msg }); }
-        }
-        if ("Notification" in window && Notification.permission !== "granted") {
+        
+        // 如果還沒要過權限，顯示橫幅
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
             document.getElementById('notifBanner').style.display = 'block';
         }
 
