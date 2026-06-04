@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪐AION2聖域小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --shasha-purple: #1a0b2e;
+            --shasha-card: rgba(30, 20, 50, 0.7);
+            --shasha-primary: #ffb7c5;
+            --shasha-accent: #ff9aaf;
+            --shasha-glow: rgba(255, 183, 197, 0.2);
+            --shasha-text: #fce7f3;
+            --raid-bg-gradient: radial-gradient(circle at 50% 50%, #2d1b4d 0%, #1a0b2e 100%);
+        }
+
+        .theme-new-raid {
+            --shasha-primary: #00f2ff;
+            --shasha-accent: #70e1ff;
+            --shasha-glow: rgba(0, 242, 255, 0.3);
+            --shasha-text: #e0faff;
+            --raid-bg-gradient: radial-gradient(circle at 50% 50%, #0b1a2e 0%, #050b1a 100%);
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--shasha-purple);
+            background-image: var(--raid-bg-gradient), radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px);
+            background-size: 100% 100%, 200px 200px;
+            background-attachment: fixed;
+            color: var(--shasha-text);
+            min-height: 100vh;
+            transition: all 0.5s ease;
+            padding-bottom: 80px;
+        }
+
+        .glass-card {
+            background: var(--shasha-card);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            border: 1px solid var(--shasha-glow);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            transition: all 0.5s ease;
+        }
+
+        .btn-shasha {
+            background: linear-gradient(135deg, var(--shasha-accent) 0%, #d48c9a 100%);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .slot-full {
+            background: rgba(250, 204, 21, 0.2) !important;
+            border: 2px solid #facc15 !important;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
+        }
+
+        .vote-box {
+            width: 24px; height: 24px; border: 1px solid var(--shasha-glow);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; background: rgba(255, 255, 255, 0.05);
+        }
+        .vote-box.active-ok { background: var(--shasha-primary); color: #1a0b2e; }
+        .vote-box.active-no { background: #ef4444; color: white; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(15, 5, 25, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--shasha-glow);
+            display: flex; justify-content: space-around; align-items: center;
+            padding: 12px 0; z-index: 50; height: 64px;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 10px; color: rgba(255, 255, 255, 0.4); cursor: pointer; gap: 2px;
+        }
+        .nav-item.active { color: var(--shasha-primary); transform: translateY(-2px); }
+
+        .mock-bin {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed var(--shasha-glow);
+            min-height: 60px; border-radius: 12px; padding: 8px;
+        }
+        .draggable-member { cursor: grab; user-select: none; }
+        .draggable-member:active { cursor: grabbing; }
+
+        .modal-overlay { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); }
+
+        .raid-switch, .week-nav {
+            display: flex; background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px; padding: 4px; gap: 4px;
+        }
+        .raid-btn, .week-btn {
+            flex: 1; padding: 6px; border-radius: 8px; font-size: 10px; font-weight: bold; text-align: center; cursor: pointer;
+        }
+        .active-old { background: #ffb7c5; color: #1a0b2e; }
+        .active-new { background: #00f2ff; color: #1a0b2e; }
+
+        .week-label-today {
+            background: #ffb7c5;
+            color: #1a0b2e;
+            padding: 2px 6px;
+            border-radius: 99px;
+            font-size: 8px;
+            font-weight: 800;
+            margin-left: 4px;
+            box-shadow: 0 0 10px rgba(255, 183, 197, 0.4);
+        }
+
+        /* 專屬下拉選單滾動條美化 */
+        #customDropdownList::-webkit-scrollbar { width: 6px; }
+        #customDropdownList::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 8px; }
+        #customDropdownList::-webkit-scrollbar-thumb { background: rgba(255,183,197,0.3); border-radius: 8px; }
+        #customDropdownList::-webkit-scrollbar-thumb:hover { background: rgba(255,183,197,0.5); }
+    </style>
+</head>
+<body id="mainBody">
+
+    <div class="max-w-4xl mx-auto p-4 md:p-8 relative" id="pageContent">
+        
+        <!-- 加入主畫面按鈕 -->
+        <button onclick="window.openPwaTutorial()" class="absolute top-4 right-4 text-[10px] bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full flex items-center gap-1 transition-all border border-white/10 z-50 shadow-md">
+            <i data-lucide="smartphone" class="w-3 h-3"></i> 加入主畫面
+        </button>
+
+        <!-- Header -->
+        <header class="flex flex-col items-center mb-10 text-white">
+            <div class="w-[60px] h-[60px] rounded-full flex items-center justify-center shadow-lg text-3xl transition-all duration-500" 
+                 id="headerPlanet" style="background: linear-gradient(45deg, #ffb7c5, #7c3aed);">🪐</div>
+            <h1 class="text-2xl font-bold tracking-widest mt-4">AION2聖域小助手</h1>
+        </header>
+
+        <!-- Tab 1: Sign Up (報名) -->
+        <div id="tab-signup" class="tab-pane space-y-6">
+            <div class="glass-card p-6 shadow-xl relative z-50">
+                <h3 class="text-xl font-bold text-pink-300 mb-4 flex items-center gap-2"><span>⌛</span> 前線報到</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-xs font-bold text-pink-200 uppercase tracking-widest">你是誰</label>
+                    </div>
+                    
+                    <div class="relative" id="playerDropdownContainer">
+                        <input type="text" id="playerName" autocomplete="off" class="w-full px-4 py-3 rounded-2xl outline-none focus:ring-2 focus:ring-pink-400 transition bg-white/5 border border-white/10 text-white pr-[50px]" placeholder="輸入或從清單選擇暱稱...">
+                        <button id="dropdownToggleBtn" onclick="window.toggleCustomDropdown(event)" class="absolute inset-y-0 right-0 w-[50px] flex items-center justify-center border-l border-white/10 hover:bg-white/10 rounded-r-2xl transition cursor-pointer group">
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-pink-400/70 group-hover:text-pink-300 transition"></i>
+                        </button>
+                        <div id="customDropdownList" class="hidden absolute top-[calc(100%+8px)] left-0 right-0 bg-[#23143d] border border-pink-400/30 rounded-xl max-h-[240px] overflow-y-auto z-[60] shadow-2xl backdrop-blur-xl">
+                        </div>
+                    </div>
+                    
+                    <p id="autoJobNotice" class="mt-2 text-[10px] text-pink-400/70 italic"></p>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 shadow-xl relative" id="signupSettings">
+                <div id="timeLock" class="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-[28px] text-xs font-bold text-pink-300">
+                    ⚠️ 請先在報到區確認身分
+                </div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] uppercase font-bold opacity-50 mb-1 block text-pink-100">聖域副本</label>
+                            <div class="raid-switch" id="signupRaidSwitch"></div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold opacity-50 mb-1 block text-pink-100">選擇週期</label>
+                            <div class="week-nav" id="signupWeekNav"></div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-white/5">
+                        <div class="flex gap-2 mb-3">
+                            <button id="modeOk" onclick="window.switchFillMode('ok')" class="flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-[#ffb7c5] text-[#1a0b2e]">🟢 只填我可以</button>
+                            <button id="modeNo" onclick="window.switchFillMode('no')" class="flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-white/5 text-white opacity-50 hover:bg-white/10">🔴 只填我不行</button>
+                        </div>
+                        <div id="timeCheckboxes" class="grid grid-cols-1 gap-1 max-h-[400px] overflow-y-auto"></div>
+                        <button id="submitBtn" onclick="window.submitRaidVotes()" class="btn-shasha w-full mt-4 flex items-center justify-center gap-2">
+                            <span>✅</span> 提交報名紀錄
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Heatmap (報名總覽) -->
+        <div id="tab-heatmap" class="tab-pane hidden space-y-6">
+            <div id="publishedRaidSection" class="glass-card p-6 shadow-[0_0_20px_rgba(255,183,197,0.15)] hidden border-pink-400/50 border-2 relative overflow-hidden bg-gradient-to-br from-[#2d1b4d] to-[#1a0b2e]">
+                 <div class="absolute top-0 left-0 bg-pink-500 text-white text-[10px] font-bold px-3 py-1 rounded-br-lg tracking-widest shadow-md">⭐ 開戰公告</div>
+                 <h3 id="publishedRaidTitle" class="text-lg font-bold text-pink-200 mt-4 mb-5 text-center flex items-center justify-center gap-2"></h3>
+                 <div id="publishedRaidBatches" class="space-y-4 text-white"></div>
+                 <div id="publishedRaidFooter" class="text-[9px] text-right opacity-40 text-pink-200 mt-4"></div>
+            </div>
+
+            <div class="glass-card p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <h3 class="text-xl font-bold text-pink-300 flex items-center gap-2"><span>📊</span> 報名總覽</h3>
+                    <div class="flex gap-2">
+                         <div class="raid-switch w-32" id="heatmapRaidSwitch"></div>
+                         <div class="week-nav w-64" id="heatmapWeekNav"></div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-white/5">
+                    <table class="w-full text-center border-collapse text-xs">
+                        <thead><tr id="tableHeader"></tr></thead>
+                        <tbody id="statsTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="mt-8 space-y-6 text-white">
+                    <div>
+                        <h4 class="font-bold text-sm mb-4 border-b border-white/5 pb-2 text-pink-200">本週已填寫 (<span id="playerCount">0</span>)</h4>
+                        <div id="playerList" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm mb-4 border-b border-white/5 pb-2 text-gray-400 opacity-60">本週未填寫</h4>
+                        <div id="unfilledPlayerList" class="flex flex-wrap gap-2 opacity-50"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Mock Sorting (成員/模擬) -->
+        <div id="tab-mock" class="tab-pane hidden space-y-6">
+            <div class="glass-card p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-pink-300 mb-2">🧪 模擬分隊</h3>
+                        <p class="text-[10px] opacity-50">供模擬配對，數據不存檔。</p>
+                    </div>
+                    <div class="flex flex-wrap justify-end gap-2">
+                        <button onclick="window.copyMockToClipboard()" class="text-[10px] bg-green-500/20 px-3 py-1.5 rounded-lg border border-green-400/20 hover:bg-green-500/30 transition-all flex items-center gap-1 text-green-300">
+                            <i data-lucide="copy" class="w-3 h-3"></i> 複製分隊
+                        </button>
+                        <button onclick="window.openMemberEditor()" class="text-[10px] bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-400/20 hover:bg-blue-500/30 transition-all flex items-center gap-1 text-blue-200">
+                            <i data-lucide="user-cog" class="w-3 h-3"></i> 成員管理
+                        </button>
+                        <button onclick="window.addMockBatch()" class="text-[10px] bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/20 transition-all flex items-center gap-1 text-white">
+                            <i data-lucide="plus" class="w-3 h-3"></i> 新增批次
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="md:col-span-1">
+                        <label class="text-[10px] font-bold uppercase opacity-50 block mb-2 text-pink-100">成員池 (可拖動)</label>
+                        <div id="mockMemberPool" class="mock-bin h-[500px] overflow-y-auto space-y-2" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
+                    </div>
+                    <div id="mockBatchContainer" class="md:col-span-3 grid grid-cols-1 gap-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" id="nav-signup" onclick="window.switchTab('signup', this)"><i data-lucide="edit-3" class="w-6 h-6"></i><span>報名</span></div>
+        <div class="nav-item" id="nav-heatmap" onclick="window.switchTab('heatmap', this)"><i data-lucide="layout-grid" class="w-6 h-6"></i><span>報名總覽</span></div>
+        <div class="nav-item" id="nav-mock" onclick="window.switchTab('mock', this)"><i data-lucide="users" class="w-6 h-6"></i><span>成員/模擬</span></div>
+    </nav>
+
+    <!-- Modals -->
+    <div id="memberEditorModal" class="fixed inset-0 modal-overlay hidden z-[110] flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-lg p-6 space-y-4 overflow-y-auto max-h-[80vh]">
+            <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <h3 class="text-lg font-bold text-blue-300">成員名單管理</h3>
+                <button onclick="window.closeMemberEditor()" class="text-white opacity-50 hover:opacity-100 transition">✕</button>
+            </div>
+            
+            <div class="flex items-center gap-2 bg-blue-500/10 p-3 rounded-xl border border-blue-400/30">
+                <input type="text" id="newMemberName" class="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-blue-400 transition" placeholder="輸入新成員暱稱...">
+                <select id="newMemberJob" class="bg-black/50 border border-white/10 rounded-lg px-2 py-2 text-xs text-white outline-none focus:border-blue-400 transition w-[110px]">
+                    <option value="🛡️ 守護星">🛡️ 守護星</option><option value="⚔️ 劍星">⚔️ 劍星</option>
+                    <option value="🗡️ 殺星">🗡️ 殺星</option><option value="🏹 弓星">🏹 弓星</option>
+                    <option value="🪄 魔道星">🪄 魔道星</option><option value="👻 精靈星">👻 精靈星</option>
+                    <option value="🍼 治癒星">🍼 治癒星</option><option value="✨ 護法星">✨ 護法星</option>
+                </select>
+                <button onclick="window.addNewMember()" class="text-xs text-blue-900 bg-blue-300 px-4 py-2 rounded-lg font-bold hover:bg-blue-400 transition shadow-[0_0_10px_rgba(147,197,253,0.3)]">新增</button>
+            </div>
+
+            <div id="memberEditorList" class="space-y-2 mt-4"></div>
+        </div>
+    </div>
+
+    <div id="participantModal" class="fixed inset-0 modal-overlay hidden z-[100] flex items-center justify-center p-4 text-white">
+        <div class="glass-card w-full max-w-4xl p-6 space-y-6 overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-start border-b border-white/10 pb-4">
+                <div>
+                    <h3 id="modalSlotTime" class="text-lg font-bold text-pink-300">參戰名單</h3>
+                    <p id="modalSlotCount" class="text-[10px] opacity-60">當前統計: 0 人</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 justify-end">
+                    <button id="copyTeamBtn" onclick="window.copyToClipboard()" class="text-[10px] bg-green-500/20 px-3 py-1.5 rounded-lg border border-green-400/20 hover:bg-green-500/30 text-green-300 flex items-center gap-1">
+                        <i data-lucide="copy" class="w-3 h-3"></i> 複製分隊名單
+                    </button>
+                    <button id="editModeBtn" onclick="window.toggleEditMode()" class="text-[10px] bg-pink-500/20 px-3 py-1.5 rounded-lg border border-pink-400/20 hover:bg-pink-500/30 text-pink-300 flex items-center gap-1">
+                        <i data-lucide="lock" id="editIcon" class="w-3 h-3"></i> 編輯模式
+                    </button>
+                    <button onclick="window.addModalBatch()" id="modalAddBatchBtn" class="hidden text-[10px] bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/20 transition-all text-white flex items-center gap-1">
+                        <i data-lucide="plus" class="w-3 h-3"></i> 加批次
+                    </button>
+                    <button onclick="window.saveRaidLayout()" id="modalSaveBtn" class="hidden text-[10px] bg-blue-500 px-3 py-1.5 rounded-lg font-bold text-white">儲存草稿</button>
+                    
+                    <button onclick="window.publishRaidLayout()" id="modalPublishBtn" class="hidden text-[10px] bg-yellow-500 px-3 py-1.5 rounded-lg font-bold text-white flex items-center gap-1 shadow-[0_0_10px_rgba(234,179,8,0.4)] hover:bg-yellow-400 transition">
+                        <i data-lucide="megaphone" class="w-3 h-3"></i> 公告分隊結果
+                    </button>
+                    
+                    <button onclick="window.closeParticipantModal()" class="text-white opacity-50 ml-2">✕</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="md:col-span-1">
+                    <span class="text-[10px] font-bold uppercase opacity-50 block mb-2 text-pink-100">參與成員 (拖動分隊)</span>
+                    <div id="modalParticipantList" class="mock-bin space-y-2 h-[450px] overflow-y-auto" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div>
+                </div>
+                <div id="modalBatchContainer" class="md:col-span-3 grid grid-cols-1 gap-4"></div>
+            </div>
+            <div id="lastEditInfo" class="text-[9px] text-right opacity-40 text-pink-200"></div>
+        </div>
+    </div>
+
+    <!-- 浮水印 Footer -->
+    <div class="text-center text-[10px] text-white/30 mt-8 mb-12 tracking-widest font-light">
+        Crafted with 💖 by Vanessa Huang
+    </div>
+
+    <!-- 系統專屬自訂對話框 -->
+    <div id="sysModal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-xs p-6 text-center text-white relative border border-pink-400/30 shadow-2xl">
+            <h3 id="sysModalTitle" class="text-lg font-bold mb-3 text-pink-300">提示</h3>
+            <p id="sysModalMsg" class="text-sm mb-5 text-pink-100 opacity-90"></p>
+            <div id="sysModalInputContainer" class="hidden mb-5">
+                <input type="password" id="sysModalInput" class="w-full px-4 py-2 rounded-xl bg-black/50 border border-pink-400/30 text-center tracking-widest outline-none focus:border-pink-400 transition" placeholder="請輸入密碼">
+            </div>
+            <div class="flex justify-center gap-3">
+                <button id="sysModalCancelBtn" class="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition text-xs font-bold hidden">取消</button>
+                <button id="sysModalConfirmBtn" class="px-5 py-2 rounded-xl bg-pink-500/30 hover:bg-pink-500/50 border border-pink-400/50 transition text-xs font-bold">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加入主畫面教學彈窗 -->
+    <div id="pwaTutorialModal" class="fixed inset-0 modal-overlay hidden z-[9999] flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-sm p-6 space-y-4 text-white relative border border-pink-400/30 shadow-2xl">
+            <button onclick="window.closePwaTutorial()" class="absolute top-4 right-4 text-white opacity-50 hover:opacity-100 transition">✕</button>
+            <h3 class="text-lg font-bold text-pink-300 text-center flex items-center justify-center gap-2">
+                <i data-lucide="smartphone" class="w-5 h-5"></i> 加入手機主畫面
+            </h3>
+            <div class="space-y-4 text-sm text-pink-100/90 mt-4 leading-relaxed">
+                <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                    <p class="font-bold text-white border-b border-white/10 pb-2 mb-2 flex items-center gap-1">🍎 iOS (Safari) 用戶</p>
+                    <ol class="list-decimal pl-4 space-y-1.5 text-xs">
+                        <li>點擊螢幕下方中央的 <span class="bg-white/20 px-1 rounded">分享圖示</span> (方框往上的箭頭)</li>
+                        <li>往下滑動，點選 <span class="bg-white/20 px-1 rounded">加入主畫面</span></li>
+                        <li>點擊右上角的 <span class="bg-white/20 px-1 rounded">新增</span> 即可！</li>
+                    </ol>
+                </div>
+                <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                    <p class="font-bold text-white border-b border-white/10 pb-2 mb-2 flex items-center gap-1">🤖 Android (Chrome) 用戶</p>
+                    <ol class="list-decimal pl-4 space-y-1.5 text-xs">
+                        <li>點擊右上角的 <span class="bg-white/20 px-1 rounded">更多圖示</span> (三個點)</li>
+                        <li>點選 <span class="bg-white/20 px-1 rounded">加到主畫面</span></li>
+                        <li>點擊 <span class="bg-white/20 px-1 rounded">新增</span> 即可！</li>
+                    </ol>
+                </div>
+            </div>
+            <button onclick="window.closePwaTutorial()" class="btn-shasha w-full mt-4">我知道了 💖</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const SysModal = {
+            show: (options) => {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('sysModal');
+                    document.getElementById('sysModalTitle').innerText = options.title || '提示';
+                    document.getElementById('sysModalMsg').innerText = options.msg || '';
+                    const inputContainer = document.getElementById('sysModalInputContainer');
+                    const input = document.getElementById('sysModalInput');
+                    if (options.type === 'prompt') {
+                        inputContainer.classList.remove('hidden');
+                        input.value = '';
+                        input.type = options.inputType || 'text';
+                        setTimeout(() => input.focus(), 100);
+                    } else { inputContainer.classList.add('hidden'); }
+                    const cancelBtn = document.getElementById('sysModalCancelBtn');
+                    if (options.type === 'confirm' || options.type === 'prompt') { cancelBtn.classList.remove('hidden'); } else { cancelBtn.classList.add('hidden'); }
+                    const confirmBtn = document.getElementById('sysModalConfirmBtn');
+                    const cleanup = () => { modal.classList.add('hidden'); confirmBtn.onclick = null; cancelBtn.onclick = null; };
+                    confirmBtn.onclick = () => { cleanup(); if (options.type === 'prompt') resolve(input.value.trim()); else resolve(true); };
+                    cancelBtn.onclick = () => { cleanup(); resolve(null); };
+                    modal.classList.remove('hidden');
+                });
+            },
+            alert: (msg, title="提示") => SysModal.show({ type: 'alert', msg, title }),
+            confirm: (msg, title="確認") => SysModal.show({ type: 'confirm', msg, title }),
+            prompt: (msg, title="請輸入", inputType="password") => SysModal.show({ type: 'prompt', msg, title, inputType })
+        };
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCF1ODTJrSo7CtuCB--C3rSLuSecJtzJ7c",
+            authDomain: "aion2-helper.firebaseapp.com",
+            projectId: "aion2-helper",
+            storageBucket: "aion2-helper.firebasestorage.app",
+            messagingSenderId: "808714830690",
+            appId: "1:808714830690:web:6a49e5c7d22922c563a23b"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'shasha-aion2-raid';
+        
+        let currentUser = null;
+        let currentWedDate = null;
+        let allVotes = [];
+        let allMembers = [];
+        let unsubscribeVotes = null;
+        let currentRaid = 'old';
+        let currentFillMode = 'ok';
+        let mySelectedVotes = {};
+        let mockBatchCount = 2;
+        let modalBatchCount = 2;
+        let isEditMode = false;
+        let currentActiveSlot = null;
+        let playerJobPresets = {};
+        let mockDragCounts = JSON.parse(localStorage.getItem('shasha_mock_drag_counts') || '{}');
+
+        const dayNames = ['三', '四', '五', '六', '日', '一', '二'];
+        const slots = ['20:00', '21:00', '22:00', '23:00'];
+
+        function getWeekId(date) { return date.toISOString().split('T')[0]; }
+        function formatDate(date) { return `${date.getMonth() + 1}/${date.getDate()}`; }
+        function getRecentWednesday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = (day < 3) ? (day + 4) : (day - 3);
+            d.setDate(d.getDate() - diff); d.setHours(0, 0, 0, 0);
+            return d;
+        }
+        function createBatchHtml(batchIdx, teamBaseId) {
+            return `
+                <div class="bg-white/5 p-4 rounded-2xl border border-white/10 space-y-4">
+                    <div class="flex justify-between items-center"><span class="text-xs font-bold text-pink-300">第 ${batchIdx + 1} 梯次</span></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><span class="text-[9px] opacity-50 mb-1 block text-center text-pink-100 font-bold tracking-widest">1 隊</span><div class="mock-bin" id="${teamBaseId}-1" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+                        <div><span class="text-[9px] opacity-50 mb-1 block text-center text-pink-100 font-bold tracking-widest">2 隊</span><div class="mock-bin" id="${teamBaseId}-2" ondrop="window.drop(event)" ondragover="window.allowDrop(event)"></div></div>
+                    </div>
+                </div>
+            `;
+        }
+        function createMemberNode(p, id) {
+            const div = document.createElement('div');
+            div.id = id; div.draggable = true; div.ondragstart = window.drag;
+            div.className = "draggable-member p-2 bg-white/10 rounded-lg border border-white/5 flex items-center justify-between text-[11px] text-white transition hover:bg-white/20";
+            div.dataset.name = p.name; div.dataset.job = p.job;
+            const icon = p.job ? p.job.split(' ')[0] : '👤';
+            div.innerHTML = `<span>${icon} ${p.name}</span><i data-lucide="grip-vertical" class="w-3 h-3 opacity-30"></i>`;
+            return div;
+        }
+
+        function updateSelectorsUI() {
+            const end = new Date(currentWedDate); end.setDate(end.getDate() + 6);
+            const rangeText = `${formatDate(currentWedDate)} - ${formatDate(end)}`;
+            const nowWed = getRecentWednesday(new Date());
+            const diffWeeks = Math.round((currentWedDate.getTime() - nowWed.getTime()) / (7 * 24 * 60 * 60 * 1000));
+            let relLabel = "";
+            if (diffWeeks === 0) relLabel = `<span class="week-label-today">本週</span>`;
+            else if (diffWeeks === 1) relLabel = ` <span class="opacity-60 text-[8px]">下週</span>`;
+            else if (diffWeeks === -1) relLabel = ` <span class="opacity-60 text-[8px]">上週</span>`;
+            const raidHtml = `<div class="raid-btn ${currentRaid==='old'?'active-old':'inactive'}" onclick="window.switchRaid('old')">舊</div>
+                              <div class="raid-btn ${currentRaid==='new'?'active-new':'inactive'}" onclick="window.switchRaid('new')">新</div>`;
+            const weekHtml = `<div class="week-btn" onclick="window.changeWeek(-1)">◀</div>
+                              <div class="flex-[3] text-[9px] flex items-center justify-center font-bold text-white">${rangeText}${relLabel}</div>
+                              <div class="week-btn" onclick="window.changeWeek(1)">▶</div>`;
+            ['signupRaidSwitch', 'heatmapRaidSwitch'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = raidHtml; });
+            ['signupWeekNav', 'heatmapWeekNav'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = weekHtml; });
+            const th = document.getElementById('tableHeader');
+            if (th) {
+                th.innerHTML = `<th class="p-3 border-b border-white/5 opacity-50">時段</th>` + 
+                dayNames.map((name, i) => {
+                    const d = new Date(currentWedDate); d.setDate(d.getDate() + i);
+                    const isWeekend = (name === '六' || name === '日');
+                    return `<th class="p-3 border-b border-white/5 ${isWeekend?'text-red-500 font-bold':''} text-pink-100">週${name}<br><span class="text-[8px] opacity-40">${formatDate(d)}</span></th>`;
+                }).join('');
+            }
+        }
+
+        function renderStats() {
+            const body = document.getElementById('statsTableBody');
+            if (!body) return; body.innerHTML = '';
+            slots.forEach((slot, sIdx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td class="p-3 border-b border-white/5 font-bold opacity-70 text-pink-200">${slot}</td>`;
+                dayNames.forEach((_, dIdx) => {
+                    const available = allVotes.filter(v => {
+                        const mode = v.fillMode || 'ok';
+                        const marked = v.votes && v.votes.some(vote => vote.day === dIdx && vote.slot === sIdx);
+                        return mode === 'ok' ? marked : !marked;
+                    });
+                    const count = available.length;
+                    const cellClass = count >= 8 ? 'slot-full' : (count > 0 ? 'bg-white/5' : '');
+                    const td = document.createElement('td');
+                    td.className = `p-3 border-b border-white/5 transition-all ${cellClass}`;
+                    td.innerHTML = `<div class="font-bold ${count >= 8 ? 'text-yellow-400' : 'text-white'}">${count}</div>`;
+                    td.onclick = () => window.openParticipantModal(dIdx, sIdx, available);
+                    row.appendChild(td);
+                });
+                body.appendChild(row);
+            });
+        }
+
+        function renderPlayerList() {
+            const list = document.getElementById('playerList');
+            const unList = document.getElementById('unfilledPlayerList');
+            if (!list || !unList) return;
+            list.innerHTML = ''; unList.innerHTML = '';
+            allVotes.forEach(p => {
+                const icon = p.job ? p.job.split(' ')[0] : '👤';
+                list.innerHTML += `<div class="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] flex items-center gap-2"><span class="opacity-70">${icon}</span> <span class="font-bold text-white">${p.name}</span></div>`;
+            });
+            const pCountLabel = document.getElementById('playerCount');
+            if (pCountLabel) pCountLabel.innerText = allVotes.length;
+            const unfilled = allMembers.filter(m => !allVotes.some(v => v.name === m.name));
+            unfilled.forEach(m => {
+                const icon = m.job ? m.job.split(' ')[0] : '👤';
+                unList.innerHTML += `<div class="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] flex items-center gap-2 grayscale opacity-40"><span class="opacity-70">${icon}</span> <span>${m.name}</span></div>`;
+            });
+        }
+
+        function renderCheckboxes() {
+            const container = document.getElementById('timeCheckboxes');
+            if (!container) return;
+            container.innerHTML = '';
+            dayNames.forEach((name, dIdx) => {
+                const d = new Date(currentWedDate); d.setDate(d.getDate() + dIdx);
+                const isWeekend = (name === '六' || name === '日');
+                container.innerHTML += `<div class="flex items-center justify-between p-3 bg-white/5 rounded-xl mb-1 border border-white/5">
+                    <span class="text-[11px] font-bold ${isWeekend?'text-red-400':'text-pink-200'}">週${name} ${formatDate(d)}</span>
+                    <div class="flex gap-2">${slots.map((s, sIdx) => {
+                        const status = mySelectedVotes[`${dIdx}-${sIdx}`];
+                        return `<div class="flex flex-col items-center gap-1">
+                            <span class="text-[8px] opacity-40">${s}</span>
+                            <div class="vote-box ${status==='ok'?'active-ok':(status==='no'?'active-no':'')}" onclick="window.toggleVote(${dIdx}, ${sIdx})">${status==='ok'?'✓':(status==='no'?'✗':'')}</div>
+                        </div>`;
+                    }).join('')}</div>
+                </div>`;
+            });
+        }
+        window.renderCheckboxes = renderCheckboxes;
+
+        Object.assign(window, {
+            openPwaTutorial: () => { document.getElementById('pwaTutorialModal').classList.remove('hidden'); if(window.lucide) window.lucide.createIcons(); },
+            closePwaTutorial: () => document.getElementById('pwaTutorialModal').classList.add('hidden'),
+            switchTab: (tabId, el) => {
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+                const target = document.getElementById(`tab-${tabId}`);
+                if (target) target.classList.remove('hidden');
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                if (el) el.classList.add('active');
+                else { const navEl = document.getElementById(`nav-${tabId}`); if (navEl) navEl.classList.add('active'); }
+                if (tabId === 'mock') window.renderMockLab();
+            },
+            switchRaid: (raid) => {
+                currentRaid = raid; document.getElementById('mainBody').className = raid === 'new' ? 'theme-new-raid' : '';
+                updateSelectorsUI(); startSyncVotes();
+            },
+            changeWeek: (offset) => {
+                currentWedDate.setDate(currentWedDate.getDate() + (offset * 7));
+                updateSelectorsUI(); startSyncVotes();
+            },
+            switchFillMode: async (mode, isSystemLoad = false) => {
+                if (currentFillMode === mode) {
+                    const btnOk = document.getElementById('modeOk');
+                    const btnNo = document.getElementById('modeNo');
+                    if (mode === 'ok') {
+                        if (btnOk) btnOk.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-[#ffb7c5] text-[#1a0b2e]";
+                        if (btnNo) btnNo.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-white/5 text-white opacity-50 hover:bg-white/10";
+                    } else {
+                        if (btnOk) btnOk.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-white/5 text-white opacity-50 hover:bg-white/10";
+                        if (btnNo) btnNo.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-[#ef4444] text-white";
+                    }
+                    return;
+                }
+                if (!isSystemLoad && Object.keys(mySelectedVotes).length > 0) {
+                    const res = await SysModal.confirm("切換填寫模式將會清空您目前已勾選的時段，確定要切換嗎？", "切換模式");
+                    if (!res) return;
+                }
+                currentFillMode = mode;
+                if (!isSystemLoad) mySelectedVotes = {};
+                const btnOk = document.getElementById('modeOk');
+                const btnNo = document.getElementById('modeNo');
+                if (mode === 'ok') {
+                    if (btnOk) btnOk.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-[#ffb7c5] text-[#1a0b2e]";
+                    if (btnNo) btnNo.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-white/5 text-white opacity-50 hover:bg-white/10";
+                } else {
+                    if (btnOk) btnOk.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-white/5 text-white opacity-50 hover:bg-white/10";
+                    if (btnNo) btnNo.className = "flex-1 py-2 rounded-xl text-[10px] font-bold transition-all bg-[#ef4444] text-white";
+                }
+                window.renderCheckboxes();
+            },
+            toggleVote: (d, s) => {
+                const key = `${d}-${s}`; if (mySelectedVotes[key]) delete mySelectedVotes[key];
+                else mySelectedVotes[key] = currentFillMode; window.renderCheckboxes();
+            },
+            toggleEditMode: async () => {
+                if (!isEditMode) {
+                    const pwd = await SysModal.prompt("請輸入幹部管理密碼：", "幹部認證"); 
+                    if (pwd !== '6969') { if (pwd !== null) await SysModal.alert("密碼錯誤 ❌", "錯誤"); return; }
+                    isEditMode = true; document.getElementById('editIcon').setAttribute('data-lucide', 'unlock');
+                    document.getElementById('editModeBtn').classList.replace('bg-pink-500/20', 'bg-red-500');
+                    ['modalAddBatchBtn', 'modalSaveBtn', 'modalPublishBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                } else {
+                    isEditMode = false; document.getElementById('editIcon').setAttribute('data-lucide', 'lock');
+                    document.getElementById('editModeBtn').classList.replace('bg-red-500', 'bg-pink-500/20');
+                    ['modalAddBatchBtn', 'modalSaveBtn', 'modalPublishBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
+                }
+                if (window.lucide) window.lucide.createIcons();
+            },
+            refreshMemberEditorList: () => {
+                const list = document.getElementById('memberEditorList'); if (!list) return; list.innerHTML = '';
+                allMembers.forEach(m => {
+                    const row = document.createElement('div'); row.className = "flex items-center gap-2 bg-white/5 p-2 rounded-lg mb-2 text-white";
+                    row.innerHTML = `<input type="text" value="${m.name}" class="flex-1 bg-black/30 border border-white/10 rounded px-2 py-1 text-xs outline-none">
+                        <select class="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs outline-none w-[100px]">
+                            ${['🛡️ 守護星','⚔️ 劍星','🗡️ 殺星','🏹 弓星','🪄 魔道星','👻 精靈星','🍼 治癒星','✨ 護法星'].map(j => `<option value="${j}" ${m.job===j?'selected':''}>${j}</option>`).join('')}
+                        </select>
+                        <button class="text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded hover:bg-red-400/20 transition" onclick="window.deleteMember('${m.name}')">刪除</button>
+                        <button class="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded hover:bg-green-400/20 transition" onclick="window.updateMember('${m.name}', this.parentElement)">更新</button>`;
+                    list.appendChild(row);
+                });
+            },
+            openMemberEditor: async () => {
+                const pwd = await SysModal.prompt("請輸入幹部管理密碼：", "幹部認證"); 
+                if (pwd !== '6969') { if (pwd !== null) await SysModal.alert("權限不足 ❌", "錯誤"); return; }
+                window.refreshMemberEditorList();
+                document.getElementById('memberEditorModal').classList.remove('hidden');
+            },
+            addNewMember: async () => {
+                const nameInput = document.getElementById('newMemberName'); const jobSelect = document.getElementById('newMemberJob');
+                const name = nameInput.value.trim(); const job = jobSelect.value;
+                if (!name) return await SysModal.alert("新成員暱稱不能空白喔！", "提示");
+                if (!currentUser) return await SysModal.alert("系統尚未連線，請稍候", "錯誤");
+                try {
+                    if (allMembers.some(m => m.name === name)) { return await SysModal.alert("此暱稱已經存在囉！", "提示"); }
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_members', name), { name, job, createdAt: Date.now() });
+                    nameInput.value = ''; await SysModal.alert(`成員 ${name} 新增成功！✨`, "成功");
+                } catch(e) { await SysModal.alert("新增失敗", "錯誤"); }
+            },
+            deleteMember: async (name) => { 
+                const res = await SysModal.confirm(`確定要移除成員「${name}」嗎？`, "警告");
+                if (res) { try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_members', name)); await SysModal.alert("已成功移除！", "成功"); } catch(e) { await SysModal.alert("移除失敗", "錯誤"); } }
+            },
+            updateMember: async (oldName, parent) => {
+                const newName = parent.querySelector('input').value.trim(); const newJob = parent.querySelector('select').value;
+                if (!newName) return await SysModal.alert("暱稱不能空白喔！", "提示");
+                try {
+                    if (newName !== oldName) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_members', oldName));
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_members', newName), { name: newName, job: newJob, updatedAt: Date.now() }); 
+                    await SysModal.alert("資料已更新成功！", "成功");
+                } catch(e) { await SysModal.alert("更新失敗", "錯誤"); }
+            },
+            saveRaidLayout: async () => {
+                if (!currentUser) return await SysModal.alert("系統尚未連線，請稍候", "錯誤");
+                try {
+                    const batches = [];
+                    for (let i = 0; i < modalBatchCount; i++) {
+                        const b1 = document.getElementById(`modal-team-${i}-1`); const b2 = document.getElementById(`modal-team-${i}-2`);
+                        const t1 = b1 ? Array.from(b1.children).map(node => ({ name: node.dataset.name, job: node.dataset.job })) : [];
+                        const t2 = b2 ? Array.from(b2.children).map(node => ({ name: node.dataset.name, job: node.dataset.job })) : [];
+                        batches.push({ t1, t2 });
+                    }
+                    const lastEditor = document.getElementById('playerName').value || "神秘幹部";
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_layouts', currentActiveSlot), { batches, lastEditor, updatedAt: Date.now() });
+                    const saveBtn = document.getElementById('modalSaveBtn');
+                    if (saveBtn) { saveBtn.innerHTML = "✔️ 已儲存"; saveBtn.classList.replace('bg-blue-500', 'bg-green-500'); }
+                } catch(e) { await SysModal.alert("存檔失敗", "錯誤"); }
+            },
+            publishRaidLayout: async () => {
+                if (!currentUser) return await SysModal.alert("系統尚未連線，請稍候", "錯誤");
+                const res = await SysModal.confirm("確定要將目前排好的隊伍發布為正式開戰公告嗎？", "發布確認");
+                if (!res) return;
+                try {
+                    const batches = [];
+                    for (let i = 0; i < modalBatchCount; i++) {
+                        const b1 = document.getElementById(`modal-team-${i}-1`); const b2 = document.getElementById(`modal-team-${i}-2`);
+                        const t1 = b1 ? Array.from(b1.children).map(node => ({ name: node.dataset.name, job: node.dataset.job })) : [];
+                        const t2 = b2 ? Array.from(b2.children).map(node => ({ name: node.dataset.name, job: node.dataset.job })) : [];
+                        batches.push({ t1, t2 });
+                    }
+                    const lastEditor = document.getElementById('playerName').value || "幹部";
+                    const activeSlotText = document.getElementById('modalSlotTime').innerText; 
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'published_raid', 'latest'), { batches, publisher: lastEditor, updatedAt: Date.now(), slotText: activeSlotText.replace(' 參戰名單', '') });
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_layouts', currentActiveSlot), { batches, lastEditor, updatedAt: Date.now() });
+                    await SysModal.alert("公告已成功發布！所有人都能在「報名總覽」看到囉 💖", "發布成功");
+                } catch(e) { await SysModal.alert("發布失敗", "錯誤"); }
+            },
+            copyToClipboard: () => {
+                let text = ""; 
+                if (currentActiveSlot) {
+                    const parts = currentActiveSlot.split('_');
+                    if (parts.length >= 4) {
+                        const dayIdx = parseInt(parts[2]); const slotIdx = parseInt(parts[3]);
+                        const d = new Date(currentWedDate); d.setDate(d.getDate() + dayIdx);
+                        text += `${d.getMonth() + 1}/${d.getDate()} (週${['三','四','五','六','日','一','二'][dayIdx]}) ${['20:00','21:00','22:00','23:00'][slotIdx]}\n`;
+                    }
+                }
+                const batches = Array.from(document.getElementById('modalBatchContainer').children);
+                const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
+                batches.forEach((b, idx) => {
+                    const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1];
+                    const t1 = bin1 ? Array.from(bin1.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
+                    const t2 = bin2 ? Array.from(bin2.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
+                    if (t1 || t2) text += `第${idx + 1}梯次  1隊 ${t1}    二隊 ${t2}\n`;
+                });
+                const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); 
+                SysModal.alert("分隊文案已複製到剪貼簿！🚀", "複製成功");
+            },
+            copyMockToClipboard: () => {
+                let text = "模擬分隊結果\n";
+                const batches = Array.from(document.getElementById('mockBatchContainer').children);
+                const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
+                batches.forEach((b, idx) => {
+                    const bin1 = b.querySelectorAll('.mock-bin')[0]; const bin2 = b.querySelectorAll('.mock-bin')[1];
+                    const t1 = bin1 ? Array.from(bin1.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
+                    const t2 = bin2 ? Array.from(bin2.children).map(n => `${n.dataset.name}(${abbrev(n.dataset.job)})`).join(' ') : "";
+                    if (t1 || t2) text += `第${idx + 1}梯次  1隊 ${t1}    二隊 ${t2}\n`;
+                });
+                const temp = document.createElement('textarea'); temp.value = text.trim(); document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); 
+                SysModal.alert("模擬分隊文案已複製到剪貼簿！🚀", "複製成功");
+            },
+            addMockBatch: () => { mockBatchCount++; window.renderMockLab(); },
+            addModalBatch: () => { modalBatchCount++; const container = document.getElementById('modalBatchContainer'); if (container) container.insertAdjacentHTML('beforeend', createBatchHtml(modalBatchCount-1, `modal-team-${modalBatchCount-1}`)); if (window.lucide) window.lucide.createIcons(); },
+            closeParticipantModal: () => document.getElementById('participantModal').classList.add('hidden'),
+            closeMemberEditor: () => document.getElementById('memberEditorModal').classList.add('hidden'),
+            populateCustomDropdown: () => {
+                const list = document.getElementById('customDropdownList'); if (!list || !allMembers) return; list.innerHTML = '';
+                allMembers.forEach(m => {
+                    const div = document.createElement('div'); div.className = 'px-4 py-3 hover:bg-pink-500/30 cursor-pointer text-white text-sm border-b border-white/5 transition flex items-center justify-between';
+                    const icon = m.job ? m.job.split(' ')[0] : '👤';
+                    div.innerHTML = `<span>${m.name}</span> <span class="opacity-50 text-xs">${icon}</span>`;
+                    div.onclick = (e) => { e.stopPropagation(); const input = document.getElementById('playerName'); input.value = m.name; input.dispatchEvent(new Event('input')); list.classList.add('hidden'); };
+                    list.appendChild(div);
+                });
+            },
+            toggleCustomDropdown: (e) => { e.stopPropagation(); const list = document.getElementById('customDropdownList'); if(!list) return; Array.from(list.children).forEach(child => child.style.display = 'flex'); list.classList.toggle('hidden'); },
+            openParticipantModal: async (day, slot, people) => {
+                try {
+                    const modal = document.getElementById('participantModal'); const weekId = getWeekId(currentWedDate);
+                    currentActiveSlot = `${currentRaid}_${weekId}_${day}_${slot}`;
+                    document.getElementById('modalSlotTime').innerText = `週${dayNames[day]} ${slots[slot]} 參戰名單`;
+                    document.getElementById('modalSlotCount').innerText = `目前統計: ${people.length} 人`;
+                    const saveBtn = document.getElementById('modalSaveBtn');
+                    if (saveBtn) { saveBtn.innerHTML = "儲存草稿"; if (saveBtn.classList.contains('bg-green-500')) { saveBtn.classList.replace('bg-green-500', 'bg-blue-500'); } }
+                    const ref = doc(db, 'artifacts', appId, 'public', 'data', 'raid_layouts', currentActiveSlot);
+                    const snap = await getDoc(ref); const layoutDoc = snap.exists() ? snap.data() : null;
+                    modalBatchCount = layoutDoc?.batches?.length || 2;
+                    const list = document.getElementById('modalParticipantList'); list.innerHTML = '';
+                    const isInBatch = (name) => layoutDoc?.batches?.some(b => b.t1.some(m => m.name === name) || b.t2.some(m => m.name === name));
+                    people.forEach((p, idx) => { if (!isInBatch(p.name)) list.appendChild(createMemberNode(p, `p-${idx}`)); });
+                    const container = document.getElementById('modalBatchContainer'); container.innerHTML = '';
+                    for (let i = 0; i < modalBatchCount; i++) container.innerHTML += createBatchHtml(i, `modal-team-${i}`);
+                    if (layoutDoc && layoutDoc.batches) {
+                        layoutDoc.batches.forEach((b, bIdx) => {
+                            b.t1.forEach((m, mIdx) => { const target = document.getElementById(`modal-team-${bIdx}-1`); if (target) target.appendChild(createMemberNode(m, `pm1-${bIdx}-${mIdx}`)); });
+                            b.t2.forEach((m, mIdx) => { const target = document.getElementById(`modal-team-${bIdx}-2`); if (target) target.appendChild(createMemberNode(m, `pm2-${bIdx}-${mIdx}`)); });
+                        });
+                        const d = new Date(layoutDoc.updatedAt); document.getElementById('lastEditInfo').innerText = `上次編輯: ${layoutDoc.lastEditor} (${d.toLocaleString()})`;
+                    } else { document.getElementById('lastEditInfo').innerText = ""; }
+                    modal.classList.remove('hidden'); if (window.lucide) window.lucide.createIcons();
+                } catch(e) { console.error(e); await SysModal.alert("讀取分隊資料失敗", "錯誤"); }
+            },
+            submitRaidVotes: async () => {
+                const name = document.getElementById('playerName').value.trim(); 
+                if (!playerJobPresets[name]) return await SysModal.alert("請先從下拉選單選取正確的暱稱喔！", "提示");
+                if (!currentUser) return await SysModal.alert("系統尚未連線，請稍候", "錯誤");
+                try {
+                    const weekId = getWeekId(currentWedDate);
+                    const votes = Object.keys(mySelectedVotes).map(k => { const [d, s] = k.split('-').map(Number); return { day: d, slot: s, type: mySelectedVotes[k] }; });
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', `raid_votes_${currentRaid}_${weekId}`, name), { name, job: playerJobPresets[name], votes, fillMode: currentFillMode, raid: currentRaid, updatedAt: Date.now() });
+                    await SysModal.alert("已成功同步本週紀錄！💖", "報名成功");
+                } catch(e) { await SysModal.alert("同步失敗", "錯誤"); }
+            },
+            renderMockLab: () => {
+                const pool = document.getElementById('mockMemberPool'); if (!pool) return; pool.innerHTML = '';
+                const sortedMembers = [...allMembers].sort((a, b) => { const countA = mockDragCounts[a.name] || 0; const countB = mockDragCounts[b.name] || 0; return countB - countA; });
+                sortedMembers.forEach((m, idx) => {
+                    const id = `pool-m-${idx}`; const icon = m.job ? m.job.split(' ')[0] : '👤';
+                    const jobAbbr = m.job ? (m.job.split(' ')[1] || m.job).replace('星','') : '？';
+                    const div = document.createElement('div'); div.id = id; div.draggable = true; div.ondragstart = window.drag;
+                    div.className = "draggable-member p-2 bg-white/5 rounded-lg border border-white/5 text-[11px] mb-2 flex items-center justify-between text-pink-100 hover:bg-white/10 transition";
+                    div.dataset.name = m.name; div.dataset.job = m.job;
+                    div.innerHTML = `<div class="flex items-center gap-2"><span>${icon}</span><div class="flex flex-col"><span class="font-bold text-white">${m.name}</span><span class="text-[8px] opacity-40 uppercase">(${jobAbbr})</span></div></div><i data-lucide="grip-vertical" class="w-3 h-3 opacity-30"></i>`;
+                    pool.appendChild(div);
+                });
+                const container = document.getElementById('mockBatchContainer'); if (container) { container.innerHTML = ''; for (let i = 0; i < mockBatchCount; i++) container.innerHTML += createBatchHtml(i, `mock-team-${i}`); }
+                if (window.lucide) window.lucide.createIcons();
+            },
+            allowDrop: (ev) => ev.preventDefault(),
+            drag: (ev) => { if (!isEditMode && document.getElementById('tab-mock').classList.contains('hidden')) return; ev.dataTransfer.setData("text", ev.target.id); },
+            drop: (ev) => { 
+                ev.preventDefault(); const data = ev.dataTransfer.getData("text"); const target = ev.target.closest('.mock-bin'); 
+                if (target) {
+                    const draggedEl = document.getElementById(data); target.appendChild(draggedEl); 
+                    const saveBtn = document.getElementById('modalSaveBtn');
+                    if (saveBtn && saveBtn.innerHTML.includes('已儲存')) { saveBtn.innerHTML = "儲存草稿"; saveBtn.classList.replace('bg-green-500', 'bg-blue-500'); }
+                    if (target.id.startsWith('mock-team-')) {
+                        const name = draggedEl.dataset.name;
+                        if (name) { mockDragCounts[name] = (mockDragCounts[name] || 0) + 1; localStorage.setItem('shasha_mock_drag_counts', JSON.stringify(mockDragCounts)); }
+                    }
+                } 
+            }
+        });
+
+        function startSyncVotes() {
+            if (unsubscribeVotes) unsubscribeVotes();
+            const weekId = getWeekId(currentWedDate);
+            unsubscribeVotes = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', `raid_votes_${currentRaid}_${weekId}`), (snapshot) => {
+                allVotes = snapshot.docs.map(doc => doc.data()); renderStats(); renderPlayerList(); loadMyCurrentRecord();
+            });
+        }
+
+        function loadMyCurrentRecord() {
+            const nameEl = document.getElementById('playerName'); if (!nameEl) return;
+            const name = nameEl.value.trim(); const btn = document.getElementById('submitBtn');
+            if (playerJobPresets[name]) {
+                document.getElementById('timeLock').classList.add('hidden');
+                const rec = allVotes.find(v => v.name === name);
+                if (btn) btn.innerHTML = rec ? '<span>🔄</span> 更新報名紀錄' : '<span>✅</span> 提交報名紀錄';
+                mySelectedVotes = {}; 
+                if (rec && rec.votes) { 
+                    currentFillMode = rec.fillMode || 'ok'; 
+                    rec.votes.forEach(v => { mySelectedVotes[`${v.day}-${v.slot}`] = v.type || 'ok'; }); 
+                } else { currentFillMode = 'ok'; }
+                if (window.switchFillMode) window.switchFillMode(currentFillMode, true);
+                renderCheckboxes();
+            } else { document.getElementById('timeLock').classList.remove('hidden'); }
+        }
+
+        const init = async () => {
+            currentWedDate = getRecentWednesday(new Date()); updateSelectorsUI();
+            const savedName = localStorage.getItem('shasha_raid_player_name');
+            const nameInput = document.getElementById('playerName');
+            try {
+                await signInAnonymously(auth);
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user; startSyncVotes();
+                        onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'published_raid', 'latest'), (docSnap) => {
+                            const section = document.getElementById('publishedRaidSection');
+                            const title = document.getElementById('publishedRaidTitle');
+                            const container = document.getElementById('publishedRaidBatches');
+                            if (docSnap.exists()) {
+                                const data = docSnap.data();
+                                title.innerHTML = `<span>⚔️</span> 最終成團名單：${data.slotText}`;
+                                container.innerHTML = '';
+                                const abbrev = (job) => { if (!job) return "👤"; let j = job.replace('🛡️ ', '').replace('⚔️ ', '').replace('🗡️ ', '').replace('🏹 ', '').replace('🪄 ', '').replace('👻 ', '').replace('🍼 ', '').replace('✨ ', '').replace('星', ''); return j === '治癒' ? '奶' : j; };
+                                data.batches.forEach((b, idx) => {
+                                    const t1Html = b.t1.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; return `<span class="inline-block bg-white/10 px-2 py-1 rounded text-[10px] m-0.5 whitespace-nowrap">${icon} ${m.name}<span class="opacity-50 ml-1 text-[8px]">${abbrev(m.job)}</span></span>`; }).join('');
+                                    const t2Html = b.t2.map(m => { const icon = m.job ? m.job.split(' ')[0] : '👤'; return `<span class="inline-block bg-white/10 px-2 py-1 rounded text-[10px] m-0.5 whitespace-nowrap">${icon} ${m.name}<span class="opacity-50 ml-1 text-[8px]">${abbrev(m.job)}</span></span>`; }).join('');
+                                    container.innerHTML += `<div class="bg-black/30 p-4 rounded-xl border border-white/5"><div class="text-xs font-bold text-pink-300 mb-3 text-center border-b border-white/5 pb-2">第 ${idx + 1} 梯次</div><div class="grid grid-cols-2 gap-3"><div class="bg-white/5 rounded-lg p-2"><div class="text-[9px] opacity-50 mb-2 text-center text-pink-100 font-bold tracking-widest">1 隊</div><div class="min-h-[40px] flex flex-wrap content-start">${t1Html}</div></div><div class="bg-white/5 rounded-lg p-2"><div class="text-[9px] opacity-50 mb-2 text-center text-pink-100 font-bold tracking-widest">2 隊</div><div class="min-h-[40px] flex flex-wrap content-start">${t2Html}</div></div></div></div>`;
+                                });
+                                const d = new Date(data.updatedAt); document.getElementById('publishedRaidFooter').innerText = `發布者: ${data.publisher} (${d.toLocaleString()})`;
+                                section.classList.remove('hidden');
+                            } else { section.classList.add('hidden'); }
+                        });
+                        onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'raid_members'), (snap) => {
+                            allMembers = snap.docs.map(d => d.data());
+                            if (allMembers.length === 0) {
+                                const defaultMembers = [ { name: "凡妮紗", job: "🍼 治癒星" }, { name: "壹千元", job: "🏹 弓星" }, { name: "小緣", job: "⚔️ 劍星" }, { name: "晞", job: "✨ 護法星" }, { name: "海苔章魚燒", job: "✨ 護法星" }, { name: "秀妍小萌兔", job: "🛡️ 守護星" }, { name: "鯊莉G", job: "👻 精靈星" } ];
+                                defaultMembers.forEach(async (m) => { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'raid_members', m.name), { name: m.name, job: m.job, createdAt: Date.now() }); });
+                            }
+                            window.populateCustomDropdown();
+                            playerJobPresets = {}; allMembers.forEach(d => { playerJobPresets[d.name] = d.job; });
+                            const currentlySavedName = localStorage.getItem('shasha_raid_player_name');
+                            if (currentlySavedName && playerJobPresets[currentlySavedName] && nameInput) { nameInput.value = currentlySavedName; nameInput.dispatchEvent(new Event('input')); }
+                            renderPlayerList(); if (!document.getElementById('tab-mock').classList.contains('hidden')) window.renderMockLab();
+                            if (!document.getElementById('memberEditorModal').classList.contains('hidden') && window.refreshMemberEditorList) { window.refreshMemberEditorList(); }
+                        });
+                    }
+                });
+            } catch (e) { console.error(e); }
+        };
+
+        const nameInputEl = document.getElementById('playerName');
+        if (nameInputEl) {
+            nameInputEl.addEventListener('click', (e) => { e.stopPropagation(); const list = document.getElementById('customDropdownList'); if(!list) return; Array.from(list.children).forEach(child => child.style.display = 'flex'); list.classList.remove('hidden'); });
+            nameInputEl.addEventListener('input', (e) => {
+                const val = e.target.value.trim().toLowerCase(); const list = document.getElementById('customDropdownList');
+                if(list) { list.classList.remove('hidden'); Array.from(list.children).forEach(child => { const childText = child.querySelector('span').innerText.toLowerCase(); if (childText.includes(val)) child.style.display = 'flex'; else child.style.display = 'none'; }); }
+                const notice = document.getElementById('autoJobNotice'); const rawVal = e.target.value.trim();
+                if (playerJobPresets[rawVal]) { if (notice) notice.innerText = `✨ 已辨識：${playerJobPresets[rawVal]}`; localStorage.setItem('shasha_raid_player_name', rawVal); loadMyCurrentRecord(); }
+                else { if (notice) notice.innerText = ''; document.getElementById('timeLock').classList.remove('hidden'); }
+            });
+        }
+        document.addEventListener('click', (e) => { const container = document.getElementById('playerDropdownContainer'); if(container && !container.contains(e.target)) { const list = document.getElementById('customDropdownList'); if(list) list.classList.add('hidden'); } });
+        init();
+        if (window.lucide) window.lucide.createIcons();
+    </script>
+</body>
+</html>
